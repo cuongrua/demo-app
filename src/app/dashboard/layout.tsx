@@ -2,6 +2,7 @@
 import Link from 'next/link'
 import { auth } from '@/lib/auth'
 import { redirect } from 'next/navigation'
+import { prisma } from '@/lib/prisma'
 import LogoutButton from '@/components/client/LogoutButton'
 
 export default async function DashboardLayout({
@@ -14,11 +15,21 @@ export default async function DashboardLayout({
     redirect('/login')
   }
 
-  const menuItems = [
+  const menuItems: { name: string; href: string }[] = [
     { name: 'Trang chủ', href: '/dashboard' },
     { name: 'Post của tôi', href: '/dashboard/my-posts' },
     { name: 'Account info', href: '/dashboard/account' },
   ]
+
+  // Check if user is admin
+  const user = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    include: { role: true },
+  })
+
+  if (user?.role?.name === 'ADMIN') {
+    menuItems.push({ name: 'Users', href: '/dashboard/users' })
+  }
 
   return (
     <div className="flex h-screen bg-gray-100">
