@@ -1,11 +1,9 @@
-// d:\PROJECTS\demo-app\app\login\page.tsx
-'use client'
+"use client"
 
-import { signIn } from 'next-auth/react'
-import { useRouter } from 'next/navigation'
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 
-export default function LoginPage() {
+export default function RegisterPage() {
   const router = useRouter()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -16,17 +14,19 @@ export default function LoginPage() {
     setError('')
 
     try {
-      const result = await signIn('credentials', {
-        redirect: false,
-        email,
-        password,
+      const response = await fetch('/api/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
       })
 
-      if (result?.error) {
-        setError('Email hoặc mật khẩu không đúng. Vui lòng thử lại.')
-        console.error(result.error)
+      if (response.ok) {
+        router.replace('/login')
       } else {
-        router.replace('/dashboard')
+        const data = await response.json()
+        setError(data.message || 'Đã có lỗi xảy ra. Vui lòng thử lại.')
       }
     } catch (error) {
       setError('Đã có lỗi xảy ra. Vui lòng thử lại.')
@@ -37,9 +37,7 @@ export default function LoginPage() {
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
       <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow-md">
-        <h1 className="text-2xl font-bold text-center text-gray-900">
-          Đăng nhập
-        </h1>
+        <h1 className="text-2xl font-bold text-center text-gray-900">Đăng ký</h1>
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <label
@@ -70,7 +68,7 @@ export default function LoginPage() {
               id="password"
               name="password"
               type="password"
-              autoComplete="current-password"
+              autoComplete="new-password"
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -83,15 +81,9 @@ export default function LoginPage() {
               type="submit"
               className="w-full px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
             >
-              Đăng nhập
+              Đăng ký
             </button>
           </div>
-          <p className="text-sm text-center text-gray-600">
-            Chưa có tài khoản?
-            <a href="/register" className="text-indigo-600 hover:underline">
-              Đăng ký
-            </a>
-          </p>
         </form>
       </div>
     </div>
