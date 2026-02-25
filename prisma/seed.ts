@@ -16,6 +16,8 @@ async function main() {
   // Hash passwords
   const hashedPasswordAdmin = await bcrypt.hash('securepassword123', 10)
   const hashedPasswordMember = await bcrypt.hash('memberpassword123', 10)
+  const hashedPasswordTeacher = await bcrypt.hash('teacherpass123', 10)
+  const hashedPasswordStudent = await bcrypt.hash('studentpass123', 10)
 
   // 1. Tạo Roles
   const adminRole = await prisma.role.upsert({
@@ -35,7 +37,25 @@ async function main() {
         name: 'USER' },
   })
 
-  console.log(`Đã tạo Roles: ${adminRole.name}, ${userRole.name}`)
+  const teacherRole = await prisma.role.upsert({
+    where: { name: 'TEACHER' },
+    update: {},
+    create: {
+      id: randomUUID(),
+      name: 'TEACHER',
+    },
+  })
+
+  const studentRole = await prisma.role.upsert({
+    where: { name: 'STUDENT' },
+    update: {},
+    create: {
+      id: randomUUID(),
+      name: 'STUDENT',
+    },
+  })
+
+  console.log(`Đã tạo Roles: ${adminRole.name}, ${userRole.name}, ${teacherRole.name}, ${studentRole.name}`)
 
   // 2. Tạo Users và gán Role
   const user1 = await prisma.user.upsert({
@@ -88,6 +108,33 @@ async function main() {
       },
     },
   })
+
+  // mới: teacher và student accounts
+  const teacherUser = await prisma.user.upsert({
+    where: { email: 'teacher@example.com' },
+    update: {},
+    create: {
+      id: randomUUID(),
+      email: 'teacher@example.com',
+      name: 'Teacher User',
+      password: hashedPasswordTeacher,
+      roleId: teacherRole.id,
+    },
+  })
+
+  const studentUser = await prisma.user.upsert({
+    where: { email: 'student@example.com' },
+    update: {},
+    create: {
+      id: randomUUID(),
+      email: 'student@example.com',
+      name: 'Student User',
+      password: hashedPasswordStudent,
+      roleId: studentRole.id,
+    },
+  })
+
+  console.log({ user1, user2, teacherUser, studentUser })
 
   console.log({ user1, user2 })
   console.log('Seed dữ liệu thành công!')
