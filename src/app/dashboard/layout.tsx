@@ -17,7 +17,7 @@ export default async function DashboardLayout({
 
   const menuItems: { name: string; href: string }[] = [
     { name: 'Trang chủ', href: '/dashboard' },
-    { name: 'Post của tôi', href: '/dashboard/my-posts' },
+    // { name: 'Post của tôi', href: '/dashboard/my-posts' },
     { name: 'Account info', href: '/dashboard/account' },
   ]
 
@@ -35,7 +35,7 @@ export default async function DashboardLayout({
     <div className="flex h-screen bg-gray-100">
       <aside className="w-64 bg-gray-800 text-white flex flex-col">
         <div className="p-4 border-b border-gray-700">
-          <h2 className="text-xl font-bold">Dashboard</h2>
+          <h2 className="text-xl font-bold">LMS</h2>
           <p className="text-sm text-gray-400">{session.user.email}</p>
         </div>
         <nav className="flex-1 p-4 space-y-2">

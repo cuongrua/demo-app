@@ -99,12 +99,12 @@ export default function UsersManager() {
 
   return (
     <div className="bg-white rounded-lg shadow">
-      <div className="p-6 border-b">
+      <div className="p-6 border-b border-gray-300">
         <h1 className="text-2xl font-bold mb-1">User Management</h1>
         <p className="text-gray-500 text-sm">View and manage all registered platform users</p>
       </div>
 
-      <div className="p-6 border-b space-y-4">
+      <div className="p-6 space-y-4">
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-2 flex-1">
             <input
@@ -133,9 +133,9 @@ export default function UsersManager() {
         </div>
       </div>
 
-      <div className="overflow-x-auto">
+    <div className="overflow-x-auto p-5">
         <table className="w-full">
-          <thead className="bg-gray-50 border-b">
+          <thead className="bg-gray-50">
             <tr>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">USER</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">ROLE</th>
