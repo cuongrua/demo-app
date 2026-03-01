@@ -32,7 +32,7 @@ export default async function DashboardLayout({
   }
 
   return (
-    <div className="flex h-screen bg-gray-100">
+    <div className="fixed inset-0 flex h-screen bg-gray-100">
       <aside className="w-64 bg-gray-800 text-white flex flex-col">
         <div className="p-4 border-b border-gray-700">
           <h2 className="text-xl font-bold">LMS</h2>

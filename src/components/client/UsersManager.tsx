@@ -10,16 +10,20 @@ type User = {
 }
 
 export default function UsersManager() {
+  const [mounted, setMounted] = useState(false)
   const [users, setUsers] = useState<User[]>([])
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
   const [query, setQuery] = useState('')
   const [roleFilter, setRoleFilter] = useState('ALL')
   const [statusFilter, setStatusFilter] = useState('ALL')
   const [currentPage, setCurrentPage] = useState(1)
+  const [itemsPerPage, setItemsPerPage] = useState(20)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editForm, setEditForm] = useState<{ name?: string; email?: string; role?: string }>({})
-
-  const itemsPerPage = 4
+  const [showAddModal, setShowAddModal] = useState(false)
+  const [newUserForm, setNewUserForm] = useState<{ email: string; password: string; name: string; role: string }>({ email: '', password: '', name: '', role: 'USER' })
+  const [addingUser, setAddingUser] = useState(false)
+  const [addError, setAddError] = useState('')
 
   const fetchUsers = async () => {
     setLoading(true)
@@ -35,6 +39,7 @@ export default function UsersManager() {
   }
 
   useEffect(() => {
+    setMounted(true)
     fetchUsers()
   }, [])
 
@@ -72,6 +77,47 @@ export default function UsersManager() {
     }
   }
 
+  const handleAddUser = async () => {
+    setAddError('')
+    if (!newUserForm.email || !newUserForm.password) {
+      setAddError('Email and password are required')
+      return
+    }
+    
+    setAddingUser(true)
+    try {
+      const res = await fetch('/api/admin/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: newUserForm.email,
+          password: newUserForm.password,
+          name: newUserForm.name || undefined,
+          role: newUserForm.role,
+        }),
+      })
+      
+      const data = await res.json()
+      if (res.ok) {
+        await fetchUsers()
+        setShowAddModal(false)
+        setNewUserForm({ email: '', password: '', name: '', role: 'USER' })
+      } else {
+        setAddError(data.message || 'Failed to create user')
+      }
+    } catch (e) {
+      console.error(e)
+      setAddError('An error occurred while creating the user')
+    } finally {
+      setAddingUser(false)
+    }
+  }
+
+  const handleItemsPerPageChange = (value: string) => {
+    setItemsPerPage(parseInt(value, 10))
+    setCurrentPage(1)
+  }
+
   const getInitials = (name?: string, email?: string): string => {
     const displayName = name || email || ''
     return displayName
@@ -95,7 +141,7 @@ export default function UsersManager() {
     }
   }
 
-  if (loading) return <p>Loading...</p>
+  if (!mounted) return <p>Loading...</p>
 
   return (
     <div className="bg-white rounded-lg shadow">
@@ -115,7 +161,7 @@ export default function UsersManager() {
               className="flex-1 px-4 py-2 border border-gray-300 rounded-md"
             />
           </div>
-          <button className="px-4 py-2 bg-blue-600 text-white rounded-md">+ Add New User</button>
+          <button onClick={() => setShowAddModal(true)} className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">+ Add New User</button>
         </div>
         <div className="flex items-center gap-2">
           <select value={roleFilter} onChange={(e) => setRoleFilter(e.target.value)} className="px-3 py-2 border border-gray-300 rounded-md">
@@ -134,6 +180,11 @@ export default function UsersManager() {
       </div>
 
     <div className="overflow-x-auto p-5">
+        {loading ? (
+          <div className="flex items-center justify-center py-12">
+            <p className="text-gray-600">Loading users...</p>
+          </div>
+        ) : (
         <table className="w-full">
           <thead className="bg-gray-50">
             <tr>
@@ -144,7 +195,7 @@ export default function UsersManager() {
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">ACTIONS</th>
             </tr>
           </thead>
-          <tbody className="divide-y">
+          <tbody className="divide-y divide-gray-200">
             {paginatedUsers.map((u) => (
               <tr key={u.id} className="hover:bg-gray-50">
                 <td className="px-6 py-4 flex items-center gap-3">
@@ -206,12 +257,22 @@ export default function UsersManager() {
             ))}
           </tbody>
         </table>
+        )}
       </div>
 
       <div className="px-6 py-4 border-t flex items-center justify-between">
-        <p className="text-sm text-gray-600">
-          Showing {Math.min((currentPage - 1) * itemsPerPage + 1, filtered.length)} to {Math.min(currentPage * itemsPerPage, filtered.length)} of {filtered.length} users
-        </p>
+        <div className="flex items-center gap-4">
+          <p className="text-sm text-gray-600">
+            Showing {Math.min((currentPage - 1) * itemsPerPage + 1, filtered.length)} to {Math.min(currentPage * itemsPerPage, filtered.length)} of {filtered.length} users
+          </p>
+          <select value={itemsPerPage.toString()} onChange={(e) => handleItemsPerPageChange(e.target.value)} className="px-3 py-2 border border-gray-300 rounded-md">
+            <option value="4">4 per page</option>
+            <option value="10">10 per page</option>
+            <option value="20">20 per page</option>
+            <option value="50">50 per page</option>
+          </select>
+        </div>
+        
         <div className="flex gap-2">
           {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
             <button
@@ -224,6 +285,90 @@ export default function UsersManager() {
           ))}
         </div>
       </div>
+
+      {showAddModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-lg w-96 p-6">
+            <h2 className="text-xl font-bold mb-4">Add New User</h2>
+            
+            {addError && (
+              <div className="mb-4 p-3 bg-red-100 text-red-700 rounded">
+                {addError}
+              </div>
+            )}
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                <input
+                  type="email"
+                  value={newUserForm.email}
+                  onChange={(e) => setNewUserForm({ ...newUserForm, email: e.target.value })}
+                  placeholder="user@example.com"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                <input
+                  type="password"
+                  value={newUserForm.password}
+                  onChange={(e) => setNewUserForm({ ...newUserForm, password: e.target.value })}
+                  placeholder="Enter password"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Name (Optional)</label>
+                <input
+                  type="text"
+                  value={newUserForm.name}
+                  onChange={(e) => setNewUserForm({ ...newUserForm, name: e.target.value })}
+                  placeholder="Full name"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
+                <select
+                  value={newUserForm.role}
+                  onChange={(e) => setNewUserForm({ ...newUserForm, role: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                >
+                  <option value="USER">User</option>
+                  <option value="ADMIN">Admin</option>
+                  <option value="TEACHER">Teacher</option>
+                  <option value="STUDENT">Student</option>
+                </select>
+              </div>
+            </div>
+            
+            <div className="flex gap-2 mt-6">
+              <button
+                onClick={() => {
+                  setShowAddModal(false)
+                  setNewUserForm({ email: '', password: '', name: '', role: 'USER' })
+                  setAddError('')
+                }}
+                className="flex-1 px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+                disabled={addingUser}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleAddUser}
+                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+                disabled={addingUser}
+              >
+                {addingUser ? 'Creating...' : 'Create User'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
