@@ -1,8 +1,42 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started
+### 1. Prerequisites
+Node.js: (LTS version recommended, e.g., v18 or v20).
+Git: To clone the source code.
+PostgreSQL: The database (installed directly or via Docker).
+Package Manager: npm (comes with Node.js), yarn, or pnpm.
 
-First, run the development server:
+### 2. Get Source Code & Install Dependencies
+# 1. Clone the project
+```bash
+git clone <your-git-repo-link>
+cd demo-app
+
+# 2. Install dependencies
+npm install
+```
+
+### 3. Configure Environment Variables (.env)
+Based on prisma/seed.ts and lib/auth.ts, the project requires specific environment variables. Create a file named .env in the root directory and add the following content:
+
+```bash
+DATABASE_URL="postgresql://postgres:password@localhost:5432/demo_app_db?schema=public"
+
+AUTH_SECRET="a_very_long_random_secret_string"
+```
+
+### 4. Initialize Database (Prisma & Seed)
+```bash
+# 1. Create tables in the database based on prisma/schema.prisma
+npx prisma migrate dev --name init
+
+# 2. (Important) Run the seed file to create sample data (Admin, User, Roles...)
+# This step runs the prisma/seed.ts file provided in the code
+npx prisma db seed
+```
+
+### 5. Run the Development Server
 
 ```bash
 npm run dev
